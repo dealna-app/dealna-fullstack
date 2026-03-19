@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "server.js", "use": "@vercel/node" },
+    { "src": "surge/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "server.js" },
+    { "src": "/assets/(.*)", "dest": "surge/assets/$1" },
+    { "src": "/admin", "dest": "surge/admin.html" },
+    { "src": "/", "dest": "surge/index.html" }
+  ]
+}
