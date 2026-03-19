@@ -5162,7 +5162,10 @@ function applyTranslations() {
     const key = el.getAttribute('data-i18n');
     const countSpan = el.querySelector('.cat-count');
     if (countSpan) {
-      el.childNodes[0].textContent = t(key);
+      // Save the span, update only the text, restore the span
+      const savedSpan = countSpan.cloneNode(true);
+      el.textContent = t(key) + ' ';
+      el.appendChild(savedSpan);
     } else {
       el.textContent = t(key);
     }
