@@ -3565,6 +3565,24 @@ ul, ol { list-style: none; }
 /* ============================================================
    SELECTION HIGHLIGHT
    ============================================================ */
+   /* Language switcher */
+.lang-btn.active { background: var(--ink) !important; color: var(--white) !important; }
+
+/* RTL Support */
+[dir="rtl"] .nav-inner { direction: rtl; }
+[dir="rtl"] .hero-layout { direction: rtl; }
+[dir="rtl"] .section-header { direction: rtl; }
+[dir="rtl"] .section-label-line { margin-right: 0; margin-left: 12px; }
+[dir="rtl"] .deal-store-tag { flex-direction: row-reverse; }
+[dir="rtl"] .deal-card-bottom { flex-direction: row-reverse; }
+[dir="rtl"] .modal-header { flex-direction: row-reverse; }
+[dir="rtl"] .footer-top { direction: rtl; }
+[dir="rtl"] .hero-label::before { margin-right: 0; margin-left: 8px; }
+[dir="rtl"] .ai-message { flex-direction: row-reverse; }
+[dir="rtl"] .ai-message.user { flex-direction: row; }
+[dir="rtl"] .ticker-track { animation-direction: reverse; }
+[dir="rtl"] * { font-family: var(--font-body), 'Segoe UI', Tahoma, Arial, sans-serif; }
+[dir="rtl"] .nav-logo-wordmark, [dir="rtl"] .section-title, [dir="rtl"] .deal-title { font-family: var(--font-display), Georgia, serif; }
 ::selection {
   background: rgba(200,16,46,0.12);
   color: var(--ink);
@@ -4043,21 +4061,26 @@ ul, ol { list-style: none; }
       </a>
 
       <div class="nav-links" role="list">
-        <button class="nav-link active" data-page="home" role="listitem">Home</button>
-        <button class="nav-link" data-page="deals" role="listitem">All Deals</button>
-        <button class="nav-link" data-page="stores" role="listitem">Stores</button>
-        <button class="nav-link" data-page="about" role="listitem">About</button>
+        <button class="nav-link active" data-page="home" role="listitem" data-i18n="nav_home">Home</button>
+        <button class="nav-link" data-page="deals" role="listitem" data-i18n="nav_deals">All Deals</button>
+        <button class="nav-link" data-page="stores" role="listitem" data-i18n="nav_stores">Stores</button>
+        <button class="nav-link" data-page="about" role="listitem" data-i18n="nav_about">About</button>
       </div>
 
       <div class="nav-actions">
+        <div class="lang-switcher" style="display:flex;align-items:center;gap:2px;border:1px solid var(--rule);border-radius:var(--radius-sm);overflow:hidden">
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="font-size:0.625rem;font-weight:700;letter-spacing:0.06em;padding:5px 8px;background:none;border:none;cursor:pointer;color:#888;transition:all 0.2s">EN</button>
+        <button class="lang-btn" data-lang="fr" onclick="setLang('fr')" style="font-size:0.625rem;font-weight:700;letter-spacing:0.06em;padding:5px 8px;background:none;border:none;cursor:pointer;color:#888;border-left:1px solid var(--rule);border-right:1px solid var(--rule);transition:all 0.2s">FR</button>
+        <button class="lang-btn" data-lang="ar" onclick="setLang('ar')" style="font-size:0.625rem;font-weight:700;letter-spacing:0.06em;padding:5px 8px;background:none;border:none;cursor:pointer;color:#888;transition:all 0.2s">ع</button>
+      </div>
         <button class="nav-search-btn" id="search-trigger" aria-label="Open search">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
         </button>
         <div id="nav-guest" style="display:flex;gap:8px;align-items:center">
-          <button class="btn-ghost" id="nav-login-btn" style="font-size:0.8125rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:4px 0;color:#333">Sign In</button>
-          <button class="btn-nav-cta" id="nav-register-btn">Get Started</button>
+         <button class="btn-ghost" id="nav-login-btn" data-i18n="nav_signin" style="font-size:0.8125rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:4px 0;color:#333">Sign In</button>
+          <button class="btn-nav-cta" id="nav-register-btn" data-i18n="nav_getstarted">Get Started</button>
         </div>
         <div id="nav-user" style="display:none;align-items:center;gap:8px">
           <button class="nav-user-avatar" id="nav-avatar-btn" aria-label="My account"><span id="nav-avatar-initial">?</span></button>
@@ -4234,8 +4257,13 @@ ul, ol { list-style: none; }
   <div id="category-bar" role="navigation" aria-label="Deal categories">
     <div class="container">
       <div class="category-bar-inner" role="tablist">
-        <button class="cat-tab active" data-cat="all" role="tab" aria-selected="true">
-          All Categories
+       <button class="cat-tab active" data-cat="all" role="tab" aria-selected="true" data-i18n="cat_all">All Categories<span class="cat-count" id="count-all">—</span></button>
+       <button class="cat-tab" data-cat="food" role="tab" aria-selected="false" data-i18n="cat_food">Food &amp; Dining<span class="cat-count" id="count-food">—</span></button>
+       <button class="cat-tab" data-cat="fashion" role="tab" aria-selected="false" data-i18n="cat_fashion">Fashion<span class="cat-count" id="count-fashion">—</span></button>
+       <button class="cat-tab" data-cat="electronics" role="tab" aria-selected="false" data-i18n="cat_electronics">Electronics<span class="cat-count" id="count-electronics">—</span></button>
+       <button class="cat-tab" data-cat="beauty" role="tab" aria-selected="false" data-i18n="cat_beauty">Beauty<span class="cat-count" id="count-beauty">—</span></button>
+       <button class="cat-tab" data-cat="travel" role="tab" aria-selected="false" data-i18n="cat_travel">Travel<span class="cat-count" id="count-travel">—</span></button>
+       <button class="cat-tab" data-cat="local" role="tab" aria-selected="false" data-i18n="cat_local">Local<span class="cat-count" id="count-local">—</span></button>
           <span class="cat-count" id="count-all">—</span>
         </button>
         <button class="cat-tab" data-cat="food" role="tab" aria-selected="false">
@@ -4940,8 +4968,8 @@ ul, ol { list-style: none; }
     Dealna uses essential cookies to ensure the site works correctly. We do not use tracking or advertising cookies. <a href="#">Learn more</a>
   </p>
   <div class="cookie-actions">
-    <button class="btn-cookie-accept" id="cookie-accept">Accept</button>
-    <button class="btn-cookie-decline" id="cookie-decline">Decline</button>
+  <button class="btn-cookie-accept" id="cookie-accept" data-i18n="cookie_accept">Accept</button>
+  <button class="btn-cookie-decline" id="cookie-decline" data-i18n="cookie_decline">Decline</button>
   </div>
 </div>
 
@@ -4953,6 +4981,210 @@ ul, ol { list-style: none; }
    CONFIG
    ============================================================ */
 const API_BASE = 'https://dealna-backend.vercel.app/api';
+const TRANSLATIONS = {
+  en: {
+    nav_home: 'Home', nav_deals: 'All Deals', nav_stores: 'Stores', nav_about: 'About',
+    nav_signin: 'Sign In', nav_getstarted: 'Get Started',
+    hero_label: "Morocco's deal intelligence",
+    hero_headline_1: 'The best', hero_headline_2: 'deals', hero_headline_3: 'across Morocco',
+    hero_sub: 'Dealna scans hundreds of Moroccan stores daily — verified promotions, promo codes, and flash sales, curated by AI and updated in real time.',
+    hero_cta_browse: 'Browse All Deals', hero_cta_stores: 'View Stores', hero_cta_app: 'Download App',
+    hero_scroll: 'Scroll to explore',
+    stat_deals: 'Active Deals', stat_stores: 'Partner Stores', stat_categories: 'Categories', stat_ai: 'Scored & Verified',
+    cat_all: 'All Categories', cat_food: 'Food & Dining', cat_fashion: 'Fashion',
+    cat_electronics: 'Electronics', cat_beauty: 'Beauty', cat_travel: 'Travel', cat_local: 'Local',
+    featured_title: 'Featured Deals', featured_sub: 'Highest-rated by Dealna AI', featured_action: 'View all',
+    stores_title: 'Partner Stores', stores_sub: 'Browse deals by retailer', stores_action: 'All stores',
+    how_title: 'How Dealna Works', how_sub: 'AI-powered deal discovery',
+    how_1_title: 'Automated Scanning', how_1_desc: 'Our system continuously scans Moroccan retailer websites for live promotions, flash sales, and active promo codes.',
+    how_2_title: 'AI Verification', how_2_desc: 'Every deal is reviewed and scored by our Groq-powered AI engine. Low-quality or expired offers are automatically removed.',
+    how_3_title: 'Smart Curation', how_3_desc: 'Deals are ranked, categorised, and tagged. The highest-scoring offers are promoted to Featured, refreshed daily.',
+    how_4_title: 'You Save', how_4_desc: 'Browse, filter by category or store, copy promo codes in one click, and go straight to the retailer. Always free.',
+    latest_title: 'Latest Deals', latest_sub: 'Just added today',
+    editorial_label: 'AI Intelligence',
+    editorial_headline_1: 'Every deal is', editorial_headline_2: 'scored', editorial_headline_3: 'before you see it',
+    editorial_body: "Dealna's AI pipeline runs every day. It scrapes, evaluates, and scores every promotion against dozens of criteria. Low scores get removed automatically.",
+    editorial_cta: 'How it works',
+    download_title: 'Download the App', download_sub: 'Save deals on the go',
+    download_card_title: 'Dealna for iOS and Android',
+    download_card_desc: 'Get instant alerts for new promotions, flash sales, and exclusive codes.',
+    download_ios: 'Download for iOS', download_android: 'Download for Android',
+    newsletter_title_1: 'Never miss a', newsletter_title_2: 'great deal',
+    newsletter_sub: 'Get the top 5 deals of the week sent directly to your inbox. No spam, unsubscribe anytime.',
+    newsletter_placeholder: 'your@email.com', newsletter_btn: 'Subscribe',
+    newsletter_note: 'Your data stays private. We do not sell or share your information.',
+    footer_desc: "Morocco's AI-powered deal and promo code aggregator. Updated daily, always free.",
+    footer_discover: 'Discover', footer_categories: 'Categories', footer_company: 'Company',
+    footer_about: 'About', footer_contact: 'Contact', footer_copy: 'Copyright 2026 Dealna. All rights reserved.',
+    footer_privacy: 'Privacy', footer_terms: 'Terms',
+    deals_title: 'All Deals', deals_sub: 'Loading deals...',
+    sort_score: 'AI Score', sort_discount: 'Discount', sort_newest: 'Newest',
+    sort_label: 'Sort by', load_more: 'Load More',
+    stores_page_title: 'All Stores', stores_page_sub: 'Browse deals by retailer',
+    about_headline_1: 'Smarter shopping', about_headline_2: 'starts', about_headline_3: 'here',
+    signin_title: 'Welcome to Dealna', tab_signin: 'Sign In', tab_register: 'Create Account',
+    field_email: 'Email Address', field_password: 'Password', field_name: 'Full Name',
+    field_city: 'City (optional)', btn_signin: 'Sign In', btn_register: 'Create Account',
+    account_title: 'My Account', account_sub: 'Manage your profile and saved deals',
+    cookie_text: 'Dealna uses essential cookies to ensure the site works correctly.',
+    cookie_accept: 'Accept', cookie_decline: 'Decline',
+    recommended_title: 'Recommended for you', recommended_sub: 'Personalized picks based on your interests',
+    ai_greeting: 'Hello. I can help you find the best deals in Morocco. What are you looking for today?',
+    ai_placeholder: 'Ask about deals...',
+    deal_back: 'Back to Deals', deal_goto: 'Go to Deal',
+    copy_code: 'Copy', copied: 'Copied',
+    filter_all: 'All', expires_today: 'Expires today', expires_tomorrow: 'Expires tomorrow',
+    ongoing: 'Ongoing', expired: 'Expired',
+    test_banner: 'Live Platform',
+  },
+  fr: {
+    nav_home: 'Accueil', nav_deals: 'Toutes les offres', nav_stores: 'Magasins', nav_about: 'À propos',
+    nav_signin: 'Connexion', nav_getstarted: 'Commencer',
+    hero_label: "L'intelligence des bons plans au Maroc",
+    hero_headline_1: 'Les meilleures', hero_headline_2: 'offres', hero_headline_3: 'au Maroc',
+    hero_sub: "Dealna scanne des centaines de boutiques marocaines chaque jour — promotions vérifiées, codes promo et ventes flash, triés par IA en temps réel.",
+    hero_cta_browse: 'Voir les offres', hero_cta_stores: 'Voir les magasins', hero_cta_app: "Télécharger l'app",
+    hero_scroll: 'Défiler pour explorer',
+    stat_deals: 'Offres actives', stat_stores: 'Magasins partenaires', stat_categories: 'Catégories', stat_ai: 'Noté & Vérifié',
+    cat_all: 'Toutes', cat_food: 'Alimentation', cat_fashion: 'Mode',
+    cat_electronics: 'Électronique', cat_beauty: 'Beauté', cat_travel: 'Voyage', cat_local: 'Local',
+    featured_title: 'Offres vedettes', featured_sub: 'Les mieux notées par Dealna IA', featured_action: 'Voir tout',
+    stores_title: 'Magasins partenaires', stores_sub: 'Parcourir par enseigne', stores_action: 'Tous les magasins',
+    how_title: 'Comment fonctionne Dealna', how_sub: 'Découverte de bons plans par IA',
+    how_1_title: 'Scan automatique', how_1_desc: "Notre système analyse en continu les sites marocains pour trouver promotions, ventes flash et codes promo actifs.",
+    how_2_title: 'Vérification par IA', how_2_desc: "Chaque offre est évaluée par notre moteur IA Groq. Les offres de mauvaise qualité ou expirées sont supprimées automatiquement.",
+    how_3_title: 'Curation intelligente', how_3_desc: "Les offres sont classées et étiquetées. Les meilleures sont promues en section Vedette, actualisées chaque jour.",
+    how_4_title: 'Vous économisez', how_4_desc: "Parcourez, filtrez, copiez les codes promo en un clic et accédez directement au site. Toujours gratuit.",
+    latest_title: 'Dernières offres', latest_sub: "Ajoutées aujourd'hui",
+    editorial_label: 'Intelligence IA',
+    editorial_headline_1: 'Chaque offre est', editorial_headline_2: 'notée', editorial_headline_3: 'avant que vous la voyiez',
+    editorial_body: "Le pipeline IA de Dealna fonctionne chaque jour. Il analyse et note chaque promotion selon des dizaines de critères. Les mauvaises notes sont supprimées automatiquement.",
+    editorial_cta: 'Comment ça marche',
+    download_title: "Télécharger l'application", download_sub: 'Économisez en déplacement',
+    download_card_title: 'Dealna pour iOS et Android',
+    download_card_desc: "Recevez des alertes instantanées pour les nouvelles promotions, ventes flash et codes exclusifs.",
+    download_ios: 'Télécharger pour iOS', download_android: 'Télécharger pour Android',
+    newsletter_title_1: 'Ne manquez jamais', newsletter_title_2: 'une bonne affaire',
+    newsletter_sub: "Recevez les 5 meilleures offres de la semaine directement dans votre boîte mail.",
+    newsletter_placeholder: 'votre@email.com', newsletter_btn: "S'abonner",
+    newsletter_note: 'Vos données restent privées. Nous ne les vendons ni ne les partageons.',
+    footer_desc: "L'agrégateur marocain de bons plans et codes promo propulsé par IA. Mis à jour quotidiennement, toujours gratuit.",
+    footer_discover: 'Découvrir', footer_categories: 'Catégories', footer_company: 'Entreprise',
+    footer_about: 'À propos', footer_contact: 'Contact', footer_copy: 'Copyright 2026 Dealna. Tous droits réservés.',
+    footer_privacy: 'Confidentialité', footer_terms: 'Conditions',
+    deals_title: 'Toutes les offres', deals_sub: 'Chargement...',
+    sort_score: 'Score IA', sort_discount: 'Réduction', sort_newest: 'Plus récent',
+    sort_label: 'Trier par', load_more: 'Charger plus',
+    stores_page_title: 'Tous les magasins', stores_page_sub: 'Parcourir par enseigne',
+    about_headline_1: 'Des achats plus malins', about_headline_2: 'commencent', about_headline_3: 'ici',
+    signin_title: 'Bienvenue sur Dealna', tab_signin: 'Connexion', tab_register: 'Créer un compte',
+    field_email: 'Adresse e-mail', field_password: 'Mot de passe', field_name: 'Nom complet',
+    field_city: 'Ville (facultatif)', btn_signin: 'Se connecter', btn_register: 'Créer un compte',
+    account_title: 'Mon compte', account_sub: 'Gérer mon profil et mes offres sauvegardées',
+    cookie_text: 'Dealna utilise des cookies essentiels pour assurer le bon fonctionnement du site.',
+    cookie_accept: 'Accepter', cookie_decline: 'Refuser',
+    recommended_title: 'Recommandé pour vous', recommended_sub: 'Sélections basées sur vos intérêts',
+    ai_greeting: 'Bonjour. Je peux vous aider à trouver les meilleures offres au Maroc. Que recherchez-vous ?',
+    ai_placeholder: 'Posez une question sur les offres...',
+    deal_back: 'Retour aux offres', deal_goto: "Accéder à l'offre",
+    copy_code: 'Copier', copied: 'Copié',
+    filter_all: 'Tout', expires_today: "Expire aujourd'hui", expires_tomorrow: 'Expire demain',
+    ongoing: 'En cours', expired: 'Expiré',
+    test_banner: 'Plateforme en direct',
+  },
+  ar: {
+    nav_home: 'الرئيسية', nav_deals: 'جميع العروض', nav_stores: 'المتاجر', nav_about: 'حول',
+    nav_signin: 'تسجيل الدخول', nav_getstarted: 'ابدأ الآن',
+    hero_label: 'ذكاء العروض في المغرب',
+    hero_headline_1: 'أفضل', hero_headline_2: 'العروض', hero_headline_3: 'في المغرب',
+    hero_sub: 'ديالنا تسح مئات المتاجر المغربية يوميًا — عروض مثبتة، أكواد خصم، وتخفيضات مفاجئة، منظمة بالذكاء الاصطناعي.',
+    hero_cta_browse: 'تصفح العروض', hero_cta_stores: 'عرض المتاجر', hero_cta_app: 'حمّل التطبيق',
+    hero_scroll: 'مرر للاستكشاف',
+    stat_deals: 'عروض نشطة', stat_stores: 'متاجر شريكة', stat_categories: 'فئات', stat_ai: 'مُقيَّم ومُتحقق',
+    cat_all: 'جميع الفئات', cat_food: 'مأكولات', cat_fashion: 'موضة',
+    cat_electronics: 'إلكترونيات', cat_beauty: 'جمال', cat_travel: 'سفر', cat_local: 'محلي',
+    featured_title: 'عروض مميزة', featured_sub: 'الأعلى تقييمًا من ذكاء ديالنا', featured_action: 'عرض الكل',
+    stores_title: 'المتاجر الشريكة', stores_sub: 'تصفح العروض حسب المتجر', stores_action: 'جميع المتاجر',
+    how_title: 'كيف تعمل ديالنا', how_sub: 'اكتشاف العروض بالذكاء الاصطناعي',
+    how_1_title: 'مسح تلقائي', how_1_desc: 'يفحص نظامنا مواقع المتاجر المغربية باستمرار بحثًا عن العروض والتخفيضات وأكواد الخصم النشطة.',
+    how_2_title: 'تحقق بالذكاء الاصطناعي', how_2_desc: 'كل عرض يُراجَع ويُقيَّم بمحرك الذكاء الاصطناعي. العروض منخفضة الجودة أو المنتهية تُحذف تلقائيًا.',
+    how_3_title: 'تنظيم ذكي', how_3_desc: 'تُصنَّف العروض وتُرتَّب. الأعلى تقييمًا يُروَّج في القسم المميز، ويُجدَّد يوميًا.',
+    how_4_title: 'أنت توفر', how_4_desc: 'تصفح، صفِّ حسب الفئة أو المتجر، انسخ كود الخصم بنقرة، وانتقل مباشرة للمتجر. مجاني دائمًا.',
+    latest_title: 'أحدث العروض', latest_sub: 'أضيفت اليوم',
+    editorial_label: 'ذكاء اصطناعي',
+    editorial_headline_1: 'كل عرض', editorial_headline_2: 'يُقيَّم', editorial_headline_3: 'قبل أن تراه',
+    editorial_body: 'خط أنابيب الذكاء الاصطناعي في ديالنا يعمل كل يوم. يحلل ويقيم كل عرض وفق عشرات المعايير. التقييمات المنخفضة تُحذف تلقائيًا.',
+    editorial_cta: 'كيف يعمل',
+    download_title: 'حمّل التطبيق', download_sub: 'وفّر في أي مكان',
+    download_card_title: 'ديالنا لـ iOS و Android',
+    download_card_desc: 'احصل على تنبيهات فورية للعروض الجديدة والتخفيضات المفاجئة والأكواد الحصرية.',
+    download_ios: 'حمّل لـ iOS', download_android: 'حمّل لـ Android',
+    newsletter_title_1: 'لا تفوّت', newsletter_title_2: 'أي صفقة رائعة',
+    newsletter_sub: 'احصل على أفضل 5 عروض للأسبوع مباشرة في بريدك. بدون سبام.',
+    newsletter_placeholder: 'بريدك@الإلكتروني.com', newsletter_btn: 'اشترك',
+    newsletter_note: 'بياناتك خاصة. لا نبيعها ولا نشاركها.',
+    footer_desc: 'منصة المغرب للعروض وأكواد الخصم المدعومة بالذكاء الاصطناعي. تُحدَّث يوميًا، مجانية دائمًا.',
+    footer_discover: 'اكتشف', footer_categories: 'الفئات', footer_company: 'الشركة',
+    footer_about: 'حول', footer_contact: 'تواصل معنا', footer_copy: 'حقوق النشر 2026 ديالنا. جميع الحقوق محفوظة.',
+    footer_privacy: 'الخصوصية', footer_terms: 'الشروط',
+    deals_title: 'جميع العروض', deals_sub: 'جاري التحميل...',
+    sort_score: 'تقييم الذكاء', sort_discount: 'الخصم', sort_newest: 'الأحدث',
+    sort_label: 'ترتيب حسب', load_more: 'تحميل المزيد',
+    stores_page_title: 'جميع المتاجر', stores_page_sub: 'تصفح حسب المتجر',
+    about_headline_1: 'تسوق أذكى', about_headline_2: 'يبدأ', about_headline_3: 'هنا',
+    signin_title: 'مرحبًا بك في ديالنا', tab_signin: 'تسجيل الدخول', tab_register: 'إنشاء حساب',
+    field_email: 'البريد الإلكتروني', field_password: 'كلمة المرور', field_name: 'الاسم الكامل',
+    field_city: 'المدينة (اختياري)', btn_signin: 'تسجيل الدخول', btn_register: 'إنشاء حساب',
+    account_title: 'حسابي', account_sub: 'إدارة ملفي والعروض المحفوظة',
+    cookie_text: 'تستخدم ديالنا ملفات تعريف الارتباط الأساسية لضمان عمل الموقع بشكل صحيح.',
+    cookie_accept: 'قبول', cookie_decline: 'رفض',
+    recommended_title: 'موصى به لك', recommended_sub: 'اختيارات بناءً على اهتماماتك',
+    ai_greeting: 'مرحبًا! أنا هنا لمساعدتك في إيجاد أفضل العروض في المغرب. ماذا تبحث عنه؟',
+    ai_placeholder: 'اسأل عن العروض...',
+    deal_back: 'العودة للعروض', deal_goto: 'اذهب للعرض',
+    copy_code: 'نسخ', copied: 'تم النسخ',
+    filter_all: 'الكل', expires_today: 'تنتهي اليوم', expires_tomorrow: 'تنتهي غدًا',
+    ongoing: 'مستمر', expired: 'منتهي',
+    test_banner: 'المنصة مباشرة',
+  }
+};
+
+let currentLang = localStorage.getItem('dealna_lang') || 'en';
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['en'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('dealna_lang', lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  applyTranslations();
+}
+
+function applyTranslations() {
+  // Update all elements with data-i18n attribute
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  // Update language toggle buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  // Update sort select options
+  const sortEl = document.getElementById('deals-sort');
+  if (sortEl) {
+    sortEl.options[0].text = t('sort_score');
+    sortEl.options[1].text = t('sort_discount');
+    sortEl.options[2].text = t('sort_newest');
+  }
+}
 
 const CATEGORY_COLORS = {
   food:        'var(--cat-food)',
@@ -6836,6 +7068,8 @@ navigateTo = function(page, filter) {
    INIT AUTH
    ============================================================ */
 auth.init();
+// Initialize language
+setLang(currentLang);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
