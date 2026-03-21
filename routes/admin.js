@@ -141,10 +141,7 @@ router.get('/scrape-now', requireAdminOrJobKey, async (req, res) => {
 // Full AI pipeline: cleans bad deals, scrapes fresh ones,
 // AI-generates for non-scrapable stores, AI-scores everything,
 // updates featured. Run daily via cron-job.org
-router.get('/pipeline', async (req, res) => {
-  if (req.query.key !== 'dealna2025') {
-    return res.status(401).json({ success: false, message: 'Invalid key' });
-  }
+router.get('/pipeline', requireAdminOrJobKey, async (req, res) => {
     try {
     const { runPipeline } = require('../scripts/pipeline');
     const report = await runPipeline(Deal, Store);

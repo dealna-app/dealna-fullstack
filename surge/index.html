@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dealna — Best Deals in Morocco</title>
+
 <meta name="description" content="Dealna finds the best deals in Morocco. AI-verified promos, flash sales, and coupon codes, updated in real time.">
 <meta property="og:title" content="Dealna — Best Deals in Morocco">
 <meta property="og:description" content="AI-verified promos, flash sales, and coupon codes from top Moroccan stores.">
@@ -4027,6 +4028,121 @@ ul, ol { list-style: none; }
   .account-layout { grid-template-columns: 1fr; }
   .account-sidebar { position: static; }
 }
+.deal-card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: var(--rule-soft);
+}
+.deal-card-img-wrap .deal-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 0;
+  transition: transform 0.4s ease;
+}
+.deal-card:hover .deal-card-img-wrap .deal-card-image { transform: scale(1.04); }
+.deal-card-img-badges {
+  position: absolute;
+  top: 8px; left: 8px; right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.deal-discount-pill {
+  background: var(--accent);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+.deal-country-flag { font-size: 1.1rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+.deal-cat-tag {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #AAA;
+  background: var(--rule-soft);
+  border: 1px solid var(--rule);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: auto;
+}
+.deal-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.deal-original-price {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #AAA;
+  text-decoration: line-through;
+}
+.deal-final-price {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.deal-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.deal-stars { display: flex; align-items: center; gap: 1px; }
+.deal-score-text {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+.deal-urgency {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.deal-urgency-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.deal-urgency-fill {
+  height: 100%;
+  background: var(--cat-travel);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+.deal-urgency-fill.urgent {
+  background: var(--accent);
+  animation: urgency-pulse 1.5s ease-in-out infinite;
+}
+@keyframes urgency-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.deal-urgency-label {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #AAA;
+  white-space: nowrap;
+}
+.deal-urgency-label.soon { color: var(--accent); font-weight: 600; }
 
 </style>
 </head>
@@ -5353,10 +5469,28 @@ function renderDealCard(deal, size = 'normal') {
   const expiry = formatExpiry(deal.expiresAt);
   const soon = isExpiringSoon(deal.expiresAt);
   const storeName = typeof deal.store === 'object' ? deal.store.name : (deal.storeName || deal.store || 'Store');
-  const initial = storeInitial(storeName);
   const imageMeta = getImageCandidates(deal);
-  const aiScore = deal.aiScore;
-  const isAI = deal.isAIGenerated || deal.source === 'ai';
+  const aiScore = deal.aiScore || 0;
+  const stars = Math.round((aiScore / 100) * 5);
+  const originalPrice = deal.originalPrice;
+  const discountedPrice = deal.discountedPrice;
+  const currency = deal.currency || 'MAD';
+  const country = deal.country || 'MA';
+
+  let daysLeft = null;
+  let urgencyWidth = 100;
+  if (deal.expiresAt) {
+    const d = new Date(deal.expiresAt);
+    daysLeft = Math.ceil((d - new Date()) / 86400000);
+    urgencyWidth = Math.max(5, Math.min(100, (daysLeft / 30) * 100));
+  }
+
+  const starsHtml = [1,2,3,4,5].map(i =>
+    `<svg width="10" height="10" viewBox="0 0 24 24" fill="${i <= stars ? 'var(--gold)' : 'none'}" stroke="var(--gold)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+  ).join('');
+
+  const flags = { MA:'🇲🇦', US:'🇺🇸', FR:'🇫🇷', AE:'🇦🇪', EG:'🇪🇬' };
+  const flag = flags[country] || '🌍';
 
   const card = document.createElement('article');
   card.className = 'deal-card fade-in';
@@ -5366,20 +5500,40 @@ function renderDealCard(deal, size = 'normal') {
   card.setAttribute('aria-label', `${storeName}: ${deal.title}, ${disc} off`);
 
   card.innerHTML = `
-    ${aiScore ? `<div class="ai-score-badge" aria-label="AI Score ${aiScore}">AI ${aiScore}</div>` : ''}
+    <div class="deal-card-img-wrap">
+      <img class="deal-card-image" alt="${escHtml(deal.title || '')}" loading="lazy">
+      <div class="deal-card-img-badges">
+        <span class="deal-discount-pill">${escHtml(disc)} OFF</span>
+        <span class="deal-country-flag">${flag}</span>
+      </div>
+    </div>
     <div class="deal-card-top">
-      <img class="deal-card-image" alt="" loading="lazy">
       <div class="deal-store-tag">
         <div class="deal-store-dot" aria-hidden="true"></div>
         <span class="deal-store-name">${escHtml(storeName)}</span>
+        <span class="deal-cat-tag">${escHtml(CATEGORY_LABELS[cat] || cat)}</span>
       </div>
       <h3 class="deal-title">${escHtml(deal.title)}</h3>
-      <div class="deal-discount-badge" aria-label="Discount: ${disc}">${escHtml(disc)}</div>
+      <div class="deal-price-row">
+        ${originalPrice ? `<span class="deal-original-price">${originalPrice} ${currency}</span>` : ''}
+        ${discountedPrice ? `<span class="deal-final-price">${discountedPrice} ${currency}</span>` : `<span class="deal-discount-badge">${escHtml(disc)}</span>`}
+      </div>
+      <div class="deal-stars-row">
+        <div class="deal-stars">${starsHtml}</div>
+        <span class="deal-score-text">AI ${aiScore}/100</span>
+      </div>
+      ${daysLeft !== null ? `
+      <div class="deal-urgency">
+        <div class="deal-urgency-bar">
+          <div class="deal-urgency-fill ${daysLeft <= 3 ? 'urgent' : ''}" style="width:${urgencyWidth}%"></div>
+        </div>
+        <span class="deal-urgency-label ${daysLeft <= 3 ? 'soon' : ''}">${daysLeft <= 0 ? 'Expires today' : daysLeft === 1 ? 'Last day' : `${daysLeft} days left`}</span>
+      </div>` : ''}
     </div>
     <div class="deal-card-bottom">
       ${deal.promoCode
         ? `<button class="deal-code-pill" data-code="${escHtml(deal.promoCode)}" aria-label="Copy promo code ${deal.promoCode}">
-             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
              ${escHtml(deal.promoCode)}
            </button>`
         : `<span class="deal-expiry ${soon ? 'soon' : ''}">${escHtml(expiry)}</span>`
@@ -5394,10 +5548,7 @@ function renderDealCard(deal, size = 'normal') {
 
   const cardImg = card.querySelector('.deal-card-image');
   if (cardImg) {
-    const altText = imageMeta.hasProduct
-      ? (deal.title ? `${deal.title} image` : 'Deal image')
-      : (imageMeta.hasStoreLogo ? `${storeName} logo` : 'Dealna deal placeholder');
-    setImageWithFallback(cardImg, imageMeta.candidates, altText);
+    setImageWithFallback(cardImg, imageMeta.candidates, deal.title || 'Deal image');
     cardImg.classList.toggle('logo-image', !imageMeta.hasProduct && imageMeta.hasStoreLogo);
   }
 
@@ -5412,10 +5563,7 @@ function renderDealCard(deal, size = 'normal') {
   });
 
   card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openModal(deal);
-    }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(deal); }
   });
 
   return card;

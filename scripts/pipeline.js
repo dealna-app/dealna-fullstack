@@ -79,7 +79,7 @@ Return ONLY a JSON array:
     "currency": "${currency}",
     "country": "${country}",
     "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
-    "tag": "hot"
+    "tag": "new"
   }
 ]
 
@@ -193,11 +193,15 @@ async function runPipeline(Deal, Store) {
     { name: 'Nike',             category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
     { name: 'Adidas',           category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
     { name: 'Sephora',          category: 'Beauty',      count: 2, country: 'US', currency: 'USD' },
+    { name: 'Apple',            category: 'Electronics', count: 2, country: 'US', currency: 'USD' },
+    { name: 'Zara',             category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR' },
     { name: 'ASOS',             category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR' },
     { name: 'Fnac',             category: 'Electronics', count: 2, country: 'FR', currency: 'EUR' },
     { name: 'Booking.com',      category: 'Travel',      count: 2, country: 'FR', currency: 'EUR' },
     { name: 'Jumia Egypt',      category: 'Electronics', count: 2, country: 'EG', currency: 'EGP' },
+    { name: 'Noon Egypt',       category: 'Electronics', count: 2, country: 'EG', currency: 'EGP' },
     { name: 'Noon UAE',         category: 'Electronics', count: 2, country: 'AE', currency: 'AED' },
+    { name: 'Amazon UAE',       category: 'Electronics', count: 2, country: 'AE', currency: 'AED' },
     { name: 'Namshi',           category: 'Fashion',     count: 2, country: 'AE', currency: 'AED' },
   ];
 
@@ -217,9 +221,7 @@ if (!store) {
 }
       // Only generate if store has fewer than 3 active deals
       const activeCount = await Deal.countDocuments({ store: store._id, isActive: true });
-      if (activeCount >= 4) continue;
-
-      const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
+      if (activeCount >= 4) continue;const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
       const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       for (const d of aiDeals) {
@@ -240,7 +242,7 @@ if (!store) {
           imageUrl: d.imageUrl || null,
           currency: d.currency || gen.currency || 'MAD',
           country: d.country || gen.country || 'MA',
-          tag: d.tag || 'new',
+          tag: ['hot','new','verified'].includes(d.tag) ? d.tag : 'new',
           icon: '🏷️',
           affiliateUrl: store.affiliateBaseUrl || store.website || 'https://dealna.surge.sh',
           expiresAt: exp,
