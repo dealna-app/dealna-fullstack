@@ -62,29 +62,37 @@ No explanation, no markdown, just the array.`;
 }
 
 // ── AI deal generator: generates fresh deals for a store ─────
-async function generateDealsWithAI(storeName, category, count = 3) {
-  const prompt = `Generate ${count} realistic current deals for "${storeName}", a Moroccan ${category} store/brand.
-These should be believable deals that Moroccan shoppers would actually find.
-Use French or English (mix is fine, as used in Morocco).
+async function generateDealsWithAI(storeName, category, count = 3, country = 'MA', currency = 'MAD') {
+  const prompt = `Generate ${count} realistic current promotional deals for "${storeName}", a ${category} store/brand. Country: ${country}. Currency: ${currency}.
 
 Return ONLY a JSON array:
 [
   {
-    "title": "Deal title (max 60 chars)",
-    "description": "Short description (max 120 chars)",
+    "title": "Specific product name (max 60 chars)",
+    "description": "2-sentence description of the deal",
     "promoCode": "CODE123 or null",
-    "discountDisplay": "30% OFF or Free Delivery etc",
-    "discountType": "percentage or fixed or bogo or gift or free_shipping",
+    "discountDisplay": "30% OFF",
+    "discountType": "percentage",
     "discountValue": 30,
-    "originalPrice": "500 MAD or null",
-    "tag": "hot or new or verified"
+    "originalPrice": 500,
+    "discountedPrice": 350,
+    "currency": "${currency}",
+    "country": "${country}",
+    "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
+    "tag": "hot"
   }
 ]
 
 Rules:
-- Make discounts realistic (10-70%)
-- Use MAD currency for prices
-- Keep titles specific and catchy
+- imageUrl MUST be a real Unsplash URL relevant to the product category. Use these by category:
+  fashion: photo-1542291026-7eec264c27ff, photo-1483985988355-763728e1935b, photo-1490481651871-ab68de25d43d
+  electronics: photo-1498049794561-7780e7231661, photo-1519389950473-47ba0277781c, photo-1517336714731-489689fd1ca8
+  food: photo-1504674900247-0877df9cc836, photo-1565299624946-b28f40a0ae38, photo-1540189549336-e6e99eb4b45
+  beauty: photo-1596462502278-27bfdc403348, photo-1522335789203-aabd1fc54bc9, photo-1487412947147-5cebf100ffc2
+  travel: photo-1436491865332-7a61a109cc05, photo-1488085061387-422e29b40080, photo-1507525428034-b723cf961d3e
+  local: photo-1555041469-a586c61ea9bc, photo-1441986300917-64674bd600d8
+- discountValue between 10-70
+- originalPrice and discountedPrice must be realistic numbers in ${currency}
 - Return exactly ${count} deals
 - No markdown, no explanation`;
 
@@ -171,33 +179,54 @@ async function runPipeline(Deal, Store) {
 
   // ── STEP 5: AI-generate deals for non-scrapable stores ──────
   const GENERATE_FOR = [
-    { name: 'Glovo Morocco',    category: 'Food',        count: 2 },
-    { name: 'Pizza Hut Maroc',  category: 'Food',        count: 1 },
-    { name: 'Zara Morocco',     category: 'Fashion',     count: 2 },
-    { name: 'H&M Morocco',      category: 'Fashion',     count: 1 },
-    { name: 'Nocibé Maroc',     category: 'Beauty',      count: 2 },
-    { name: 'Royal Air Maroc',  category: 'Travel',      count: 2 },
-    { name: "L'bricole",        category: 'Local',       count: 1 },
-    { name: 'Hammam Zwin',      category: 'Local',       count: 1 },
+    // Morocco local
+    { name: 'Glovo Morocco',    category: 'Food',        count: 2, country: 'MA', currency: 'MAD' },
+    { name: 'Pizza Hut Maroc',  category: 'Food',        count: 1, country: 'MA', currency: 'MAD' },
+    { name: 'Zara Morocco',     category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD' },
+    { name: 'H&M Morocco',      category: 'Fashion',     count: 1, country: 'MA', currency: 'MAD' },
+    { name: 'Nocibé Maroc',     category: 'Beauty',      count: 2, country: 'MA', currency: 'MAD' },
+    { name: 'Royal Air Maroc',  category: 'Travel',      count: 2, country: 'MA', currency: 'MAD' },
+    { name: "L'bricole",        category: 'Local',       count: 1, country: 'MA', currency: 'MAD' },
+    { name: 'Hammam Zwin',      category: 'Local',       count: 1, country: 'MA', currency: 'MAD' },
+    // International
+    { name: 'Amazon',           category: 'Electronics', count: 3, country: 'US', currency: 'USD' },
+    { name: 'Nike',             category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
+    { name: 'Adidas',           category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
+    { name: 'Sephora',          category: 'Beauty',      count: 2, country: 'US', currency: 'USD' },
+    { name: 'ASOS',             category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR' },
+    { name: 'Fnac',             category: 'Electronics', count: 2, country: 'FR', currency: 'EUR' },
+    { name: 'Booking.com',      category: 'Travel',      count: 2, country: 'FR', currency: 'EUR' },
+    { name: 'Jumia Egypt',      category: 'Electronics', count: 2, country: 'EG', currency: 'EGP' },
+    { name: 'Noon UAE',         category: 'Electronics', count: 2, country: 'AE', currency: 'AED' },
+    { name: 'Namshi',           category: 'Fashion',     count: 2, country: 'AE', currency: 'AED' },
   ];
 
   for (const gen of GENERATE_FOR) {
     try {
-      const store = await Store.findOne({ name: { $regex: gen.name, $options: 'i' } });
-      if (!store) continue;
-
+      let store = await Store.findOne({ name: { $regex: gen.name, $options: 'i' } });
+if (!store) {
+  // Auto-create store if it doesn't exist yet
+  store = await Store.create({
+    name: gen.name,
+    category: gen.category,
+    country: gen.country || 'MA',
+    website: '',
+    isActive: true,
+  });
+  console.log(`[Pipeline] Created new store: ${gen.name}`);
+}
       // Only generate if store has fewer than 3 active deals
       const activeCount = await Deal.countDocuments({ store: store._id, isActive: true });
       if (activeCount >= 4) continue;
 
-      const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count);
+      const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
       const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       for (const d of aiDeals) {
         const exists = await Deal.findOne({ title: d.title, store: store._id });
         if (exists) continue;
 
-        await Deal.create({
+       await Deal.create({
           title: d.title,
           description: d.description || 'Great deal from ' + gen.name,
           store: store._id,
@@ -207,11 +236,15 @@ async function runPipeline(Deal, Store) {
           discountType: d.discountType || 'percentage',
           discountValue: d.discountValue || 0,
           originalPrice: d.originalPrice || null,
+          discountedPrice: d.discountedPrice || null,
+          imageUrl: d.imageUrl || null,
+          currency: d.currency || gen.currency || 'MAD',
+          country: d.country || gen.country || 'MA',
           tag: d.tag || 'new',
           icon: '🏷️',
           affiliateUrl: store.affiliateBaseUrl || store.website || 'https://dealna.surge.sh',
           expiresAt: exp,
-          aiScore: 70, // will be re-scored in step 6
+          aiScore: 70,
           isActive: true,
           isFeatured: false,
         });
