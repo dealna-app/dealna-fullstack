@@ -6232,21 +6232,25 @@ function openModal(deal) {
   // CTA link — external if available, otherwise open internal detail page
   const ctaBtn = document.getElementById('modal-cta-btn');
   const ctaLabel = document.getElementById('modal-cta-label');
-  ctaLabel.textContent = 'View Deal';
-  ctaBtn.href = '#';
-  ctaBtn.target = '_self';
-  ctaBtn.rel = '';
-  ctaBtn.onclick = (e) => {
-    e.preventDefault();
-    const url = getExternalDealUrl(deal);
-    if (url) {
+ ctaLabel.textContent = 'View Deal';
+  const externalUrl = deal.affiliateUrl || deal.url || deal.link || null;
+  if (externalUrl) {
+    ctaBtn.href = externalUrl;
+    ctaBtn.target = '_blank';
+    ctaBtn.rel = 'noopener noreferrer';
+    ctaBtn.onclick = (e) => {
       trackClick(deal._id || deal.id);
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
+    };
+  } else {
+    ctaBtn.href = '#';
+    ctaBtn.target = '_self';
+    ctaBtn.rel = '';
+    ctaBtn.onclick = (e) => {
+      e.preventDefault();
       closeModal();
       openDealDetail(deal);
-    }
-  };
+    };
+  } 
 
   // Show modal
   modalOverlay.style.display = 'flex';
