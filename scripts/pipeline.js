@@ -105,7 +105,7 @@ Rules:
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 800,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
       }),
@@ -134,6 +134,31 @@ async function runPipeline(Deal, Store) {
 
   const now = new Date();
   const staleDate = new Date(now - 45 * 24 * 60 * 60 * 1000);
+  // ── STEP 0: Cap stores with too many deals ───────────────────
+try {
+  const bloatedStores = await Store.find({ isActive: true });
+  for (const store of bloatedStores) {
+    const count = await Deal.countDocuments({ store: store._id, isActive: true });
+    if (count > 15) {
+      // Keep only top 15 by aiScore, delete the rest
+      const keepDeals = await Deal.find({ store: store._id, isActive: true })
+        .sort({ aiScore: -1 })
+        .limit(15)
+        .select('_id');
+      const keepIds = keepDeals.map(d => d._id);
+      const deleted = await Deal.deleteMany({
+        store: store._id,
+        _id: { $nin: keepIds },
+        isFeatured: false,
+      });
+      if (deleted.deletedCount > 0) {
+        console.log(`[Pipeline] Trimmed ${deleted.deletedCount} excess deals from ${store.name}`);
+      }
+    }
+  }
+} catch (e) {
+  report.errors.push('cap_stores: ' + e.message);
+}
 
   // ── STEP 1: Delete expired deals ────────────────────────────
   try {
@@ -179,56 +204,106 @@ async function runPipeline(Deal, Store) {
 
   // ── STEP 5: AI-generate deals for non-scrapable stores ──────
   const GENERATE_FOR = [
-    // Morocco local
-    { name: 'Glovo Morocco',    category: 'Food',        count: 2, country: 'MA', currency: 'MAD' },
-    { name: 'Pizza Hut Maroc',  category: 'Food',        count: 1, country: 'MA', currency: 'MAD' },
-    { name: 'Zara Morocco',     category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD' },
-    { name: 'H&M Morocco',      category: 'Fashion',     count: 1, country: 'MA', currency: 'MAD' },
-    { name: 'Nocibé Maroc',     category: 'Beauty',      count: 2, country: 'MA', currency: 'MAD' },
-    { name: 'Royal Air Maroc',  category: 'Travel',      count: 2, country: 'MA', currency: 'MAD' },
-    { name: "L'bricole",        category: 'Local',       count: 1, country: 'MA', currency: 'MAD' },
-    { name: 'Hammam Zwin',      category: 'Local',       count: 1, country: 'MA', currency: 'MAD' },
-    // International
-    { name: 'Amazon',           category: 'Electronics', count: 3, country: 'US', currency: 'USD' },
-    { name: 'Nike',             category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
-    { name: 'Adidas',           category: 'Fashion',     count: 2, country: 'US', currency: 'USD' },
-    { name: 'Sephora',          category: 'Beauty',      count: 2, country: 'US', currency: 'USD' },
-    { name: 'Apple',            category: 'Electronics', count: 2, country: 'US', currency: 'USD' },
-    { name: 'Zara',             category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR' },
-    { name: 'ASOS',             category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR' },
-    { name: 'Fnac',             category: 'Electronics', count: 2, country: 'FR', currency: 'EUR' },
-    { name: 'Booking.com',      category: 'Travel',      count: 2, country: 'FR', currency: 'EUR' },
-    { name: 'Jumia Egypt',      category: 'Electronics', count: 2, country: 'EG', currency: 'EGP' },
-    { name: 'Noon Egypt',       category: 'Electronics', count: 2, country: 'EG', currency: 'EGP' },
-    { name: 'Noon UAE',         category: 'Electronics', count: 2, country: 'AE', currency: 'AED' },
-    { name: 'Amazon UAE',       category: 'Electronics', count: 2, country: 'AE', currency: 'AED' },
-    { name: 'Namshi',           category: 'Fashion',     count: 2, country: 'AE', currency: 'AED' },
-  ];
+  // ── MOROCCO ──────────────────────────────────────────────
+  { name: 'Jumia Maroc',       category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://jumia.ma' },
+  { name: 'Glovo Morocco',     category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://glovoapp.com/ma' },
+  { name: 'Pizza Hut Maroc',   category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://pizzahut.ma' },
+  { name: 'McDonald\'s Maroc', category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://mcdonalds.ma' },
+  { name: 'Zara Morocco',      category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD', website: 'https://zara.com/ma' },
+  { name: 'H&M Morocco',       category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD', website: 'https://hm.com' },
+  { name: 'Nocibé Maroc',      category: 'Beauty',      count: 2, country: 'MA', currency: 'MAD', website: 'https://nocibe.ma' },
+  { name: 'Royal Air Maroc',   category: 'Travel',      count: 2, country: 'MA', currency: 'MAD', website: 'https://royalairmaroc.com' },
+  { name: "L'bricole",         category: 'Local',       count: 2, country: 'MA', currency: 'MAD', website: 'https://lbricole.ma' },
+  { name: 'Hammam Zwin',       category: 'Local',       count: 2, country: 'MA', currency: 'MAD', website: 'https://hammamzwin.ma' },
+  { name: 'Marjane',           category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://marjane.ma' },
+  { name: 'Acima Maroc',       category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://acima.ma' },
+  { name: 'Carrefour Maroc',   category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://carrefour.ma' },
+  { name: 'Inwi',              category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://inwi.ma' },
+  { name: 'Maroc Telecom',     category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://iam.ma' },
+  { name: 'Orange Maroc',      category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://orange.ma' },
+  { name: 'Decathlon Maroc',   category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD', website: 'https://decathlon.ma' },
+  { name: 'IKEA Maroc',        category: 'Local',       count: 2, country: 'MA', currency: 'MAD', website: 'https://ikea.com/ma' },
+  { name: 'Yves Rocher Maroc', category: 'Beauty',      count: 2, country: 'MA', currency: 'MAD', website: 'https://yves-rocher.ma' },
+  { name: 'Booking Maroc',     category: 'Travel',      count: 2, country: 'MA', currency: 'MAD', website: 'https://booking.com' },
+  { name: 'Atlas Voyages',     category: 'Travel',      count: 2, country: 'MA', currency: 'MAD', website: 'https://atlasvoyages.com' },
+  { name: 'Badr Eddine',       category: 'Fashion',     count: 2, country: 'MA', currency: 'MAD', website: 'https://badreddine.ma' },
+  { name: 'Electroplanet',     category: 'Electronics', count: 2, country: 'MA', currency: 'MAD', website: 'https://electroplanet.ma' },
+  { name: 'Biougnach',         category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://biougnach.ma' },
+  { name: 'Burger King Maroc', category: 'Food',        count: 2, country: 'MA', currency: 'MAD', website: 'https://burgerking.ma' },
 
-  for (const gen of GENERATE_FOR) {
+  // ── USA ──────────────────────────────────────────────────
+  { name: 'Amazon',            category: 'Electronics', count: 2, country: 'US', currency: 'USD', website: 'https://amazon.com' },
+  { name: 'Nike',              category: 'Fashion',     count: 2, country: 'US', currency: 'USD', website: 'https://nike.com' },
+  { name: 'Adidas',            category: 'Fashion',     count: 2, country: 'US', currency: 'USD', website: 'https://adidas.com' },
+  { name: 'Apple',             category: 'Electronics', count: 2, country: 'US', currency: 'USD', website: 'https://apple.com' },
+  { name: 'Sephora',           category: 'Beauty',      count: 2, country: 'US', currency: 'USD', website: 'https://sephora.com' },
+  { name: 'Best Buy',          category: 'Electronics', count: 2, country: 'US', currency: 'USD', website: 'https://bestbuy.com' },
+  { name: 'Walmart',           category: 'Electronics', count: 2, country: 'US', currency: 'USD', website: 'https://walmart.com' },
+  { name: 'Target',            category: 'Fashion',     count: 2, country: 'US', currency: 'USD', website: 'https://target.com' },
+  { name: 'Under Armour',      category: 'Fashion',     count: 2, country: 'US', currency: 'USD', website: 'https://underarmour.com' },
+  { name: 'Puma',              category: 'Fashion',     count: 2, country: 'US', currency: 'USD', website: 'https://puma.com' },
+  { name: 'MAC Cosmetics',     category: 'Beauty',      count: 2, country: 'US', currency: 'USD', website: 'https://maccosmetics.com' },
+  { name: 'NYX Cosmetics',     category: 'Beauty',      count: 2, country: 'US', currency: 'USD', website: 'https://nyxcosmetics.com' },
+  { name: 'Expedia',           category: 'Travel',      count: 2, country: 'US', currency: 'USD', website: 'https://expedia.com' },
+  { name: 'Airbnb',            category: 'Travel',      count: 2, country: 'US', currency: 'USD', website: 'https://airbnb.com' },
+  { name: 'Samsung US',        category: 'Electronics', count: 2, country: 'US', currency: 'USD', website: 'https://samsung.com' },
+
+  // ── FRANCE ───────────────────────────────────────────────
+  { name: 'Zara France',       category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR', website: 'https://zara.com/fr' },
+  { name: 'ASOS',              category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR', website: 'https://asos.com' },
+  { name: 'Fnac',              category: 'Electronics', count: 2, country: 'FR', currency: 'EUR', website: 'https://fnac.com' },
+  { name: 'Booking.com',       category: 'Travel',      count: 2, country: 'FR', currency: 'EUR', website: 'https://booking.com' },
+  { name: 'Sephora France',    category: 'Beauty',      count: 2, country: 'FR', currency: 'EUR', website: 'https://sephora.fr' },
+  { name: 'H&M France',        category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR', website: 'https://hm.com/fr' },
+  { name: 'Darty',             category: 'Electronics', count: 2, country: 'FR', currency: 'EUR', website: 'https://darty.com' },
+  { name: 'Cdiscount',         category: 'Electronics', count: 2, country: 'FR', currency: 'EUR', website: 'https://cdiscount.com' },
+  { name: 'Decathlon France',  category: 'Fashion',     count: 2, country: 'FR', currency: 'EUR', website: 'https://decathlon.fr' },
+  { name: 'Airfrance',         category: 'Travel',      count: 2, country: 'FR', currency: 'EUR', website: 'https://airfrance.fr' },
+
+  // ── UAE ──────────────────────────────────────────────────
+  { name: 'Noon UAE',          category: 'Electronics', count: 2, country: 'AE', currency: 'AED', website: 'https://noon.com' },
+  { name: 'Amazon UAE',        category: 'Electronics', count: 2, country: 'AE', currency: 'AED', website: 'https://amazon.ae' },
+  { name: 'Namshi',            category: 'Fashion',     count: 2, country: 'AE', currency: 'AED', website: 'https://namshi.com' },
+  { name: 'Carrefour UAE',     category: 'Food',        count: 2, country: 'AE', currency: 'AED', website: 'https://carrefouruae.com' },
+  { name: 'Emirates Airlines', category: 'Travel',      count: 2, country: 'AE', currency: 'AED', website: 'https://emirates.com' },
+  { name: 'Dubizzle',          category: 'Local',       count: 2, country: 'AE', currency: 'AED', website: 'https://dubizzle.com' },
+  { name: 'Faces UAE',         category: 'Beauty',      count: 2, country: 'AE', currency: 'AED', website: 'https://faces.com' },
+
+  // ── EGYPT ─────────────────────────────────────────────────
+  { name: 'Jumia Egypt',       category: 'Electronics', count: 2, country: 'EG', currency: 'EGP', website: 'https://jumia.com.eg' },
+  { name: 'Noon Egypt',        category: 'Electronics', count: 2, country: 'EG', currency: 'EGP', website: 'https://noon.com/egypt' },
+  { name: 'Souq Egypt',        category: 'Electronics', count: 2, country: 'EG', currency: 'EGP', website: 'https://souq.com' },
+  { name: 'EgyptAir',          category: 'Travel',      count: 2, country: 'EG', currency: 'EGP', website: 'https://egyptair.com' },
+];
+
+ // Run all stores in parallel batches of 5
+const BATCH_SIZE = 3;
+for (let i = 0; i < GENERATE_FOR.length; i += BATCH_SIZE) {
+  const batch = GENERATE_FOR.slice(i, i + BATCH_SIZE);
+  await Promise.allSettled(batch.map(async (gen) => {
     try {
-      let store = await Store.findOne({ name: { $regex: gen.name, $options: 'i' } });
-if (!store) {
-  // Auto-create store if it doesn't exist yet
-  store = await Store.create({
-    name: gen.name,
-    category: gen.category,
-    country: gen.country || 'MA',
-    website: '',
-    isActive: true,
-  });
-  console.log(`[Pipeline] Created new store: ${gen.name}`);
-}
-      // Only generate if store has fewer than 3 active deals
+      let store = await Store.findOne({ name: { $regex: '^' + gen.name + '$', $options: 'i' } });
+      if (!store) {
+        store = await Store.create({
+          name: gen.name,
+          category: gen.category,
+          country: gen.country || 'MA',
+          website: gen.website || '',
+          isActive: true,
+        });
+        console.log(`[Pipeline] Created new store: ${gen.name}`);
+      }
+
       const activeCount = await Deal.countDocuments({ store: store._id, isActive: true });
-      if (activeCount >= 4) continue;const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
+      if (activeCount >= 10) return;
+
+      const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
       const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       for (const d of aiDeals) {
         const exists = await Deal.findOne({ title: d.title, store: store._id });
         if (exists) continue;
-
-       await Deal.create({
+        await Deal.create({
           title: d.title,
           description: d.description || 'Great deal from ' + gen.name,
           store: store._id,
@@ -244,7 +319,7 @@ if (!store) {
           country: d.country || gen.country || 'MA',
           tag: ['hot','new','verified'].includes(d.tag) ? d.tag : 'new',
           icon: '🏷️',
-          affiliateUrl: store.affiliateBaseUrl || store.website || 'https://dealna.surge.sh',
+          affiliateUrl: store.affiliateBaseUrl || store.website || gen.website || 'https://dealna.ma',
           expiresAt: exp,
           aiScore: 70,
           isActive: true,
@@ -256,17 +331,18 @@ if (!store) {
     } catch (e) {
       report.errors.push('generate_' + gen.name + ': ' + e.message);
     }
-  }
+  }));
+}
 
   // ── STEP 6: AI-score all recent unscored deals ───────────────
   try {
     const twoDaysAgo = new Date(now - 2 * 24 * 60 * 60 * 1000);
     const unscored = await Deal.find({
       $or: [
-        { aiScore: { $lte: 70 }, createdAt: { $gte: twoDaysAgo } },
+        { aiScore: { $lte: 75 }, createdAt: { $gte: twoDaysAgo } },
         { aiScore: null },
       ]
-    }).populate('store', 'name').limit(20);
+    }).populate('store', 'name').limit(50);
 
     if (unscored.length > 0) {
       const toScore = unscored.map(d => ({
@@ -320,4 +396,4 @@ if (!store) {
   return report;
 }
 
-module.exports = { runPipeline };
+module.exports = { runPipeline, generateDealsWithAI };
