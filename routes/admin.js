@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+// v2
+const express = require('express');const router = express.Router();
 const Deal = require('../models/Deal');
 const Store = require('../models/Store');
 const User = require('../models/User');
@@ -214,6 +214,60 @@ router.get('/trim-store', requireAdminOrJobKey, async (req, res) => {
     res.json({ success: true, deleted: result.deletedCount, remaining });
   } catch(e) {
     res.json({ success: false, error: e.message });
+  }
+});
+router.get('/fill-empty-stores', requireAdminOrJobKey, async (req, res) => {
+  res.json({ success: true, message: 'Filling empty stores in background' });
+  try {
+    const { generateDealsWithAI } = require('../scripts/pipeline');
+    const targets = [
+      { name: 'Amazon UAE', category: 'Electronics', count: 4, country: 'AE', currency: 'AED' },
+      { name: 'Booking.com', category: 'Travel', count: 4, country: 'FR', currency: 'EUR' },
+      { name: 'Fnac', category: 'Electronics', count: 4, country: 'FR', currency: 'EUR' },
+      { name: 'Jumia Egypt', category: 'Electronics', count: 4, country: 'EG', currency: 'EGP' },
+      { name: 'Marjane', category: 'Food', count: 4, country: 'MA', currency: 'MAD' },
+      { name: 'Noon Egypt', category: 'Electronics', count: 4, country: 'EG', currency: 'EGP' },
+      { name: 'Noon UAE', category: 'Electronics', count: 4, country: 'AE', currency: 'AED' },
+      { name: 'Souq.com', category: 'Electronics', count: 4, country: 'MA', currency: 'MAD' },
+      { name: 'Mac Morocco', category: 'Beauty', count: 4, country: 'MA', currency: 'MAD' },
+      { name: 'Ouibus Maroc', category: 'Travel', count: 4, country: 'MA', currency: 'MAD' },
+    ];
+    const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    for (const gen of targets) {
+      const store = await Store.findOne({ name: { $regex: '^' + gen.name + '$', $options: 'i' } });
+      if (!store) continue;
+      const existing = await Deal.countDocuments({ store: store._id, isActive: true });
+      if (existing >= 4) continue;
+      const aiDeals = await generateDealsWithAI(gen.name, gen.category, gen.count, gen.country, gen.currency);
+      for (const d of aiDeals) {
+        const exists = await Deal.findOne({ title: d.title, store: store._id });
+        if (exists) continue;
+        await Deal.create({
+          title: d.title,
+          description: d.description || 'Great deal from ' + gen.name,
+          store: store._id,
+          category: gen.category,
+          promoCode: d.promoCode || null,
+          discountDisplay: d.discountDisplay || 'Deal',
+          discountType: d.discountType || 'percentage',
+          discountValue: d.discountValue || 0,
+          originalPrice: d.originalPrice ? String(d.originalPrice) : null,
+          imageUrl: d.imageUrl || null,
+          currency: gen.currency,
+          country: gen.country,
+          tag: ['hot','new','verified'].includes(d.tag) ? d.tag : 'new',
+          icon: '🏷️',
+          affiliateUrl: store.affiliateBaseUrl || store.website || 'https://dealna.surge.sh',
+          expiresAt: exp,
+          aiScore: 75,
+          isActive: true,
+          isFeatured: false,
+        });
+      }
+      console.log('[Fill] Done:', gen.name);
+    }
+  } catch(e) {
+    console.error('[Fill] Error:', e.message);
   }
 });
 
