@@ -142,13 +142,13 @@ router.get('/scrape-now', requireAdminOrJobKey, async (req, res) => {
 // AI-generates for non-scrapable stores, AI-scores everything,
 // updates featured. Run daily via cron-job.org
 router.get('/pipeline', requireAdminOrJobKey, async (req, res) => {
-    try {
+  res.json({ success: true, message: 'Pipeline started', status: 'running' });
+  try {
     const { runPipeline } = require('../scripts/pipeline');
     const report = await runPipeline(Deal, Store);
-    const totalDeals = await Deal.countDocuments({ isActive: true });
-    res.json({ success: true, report, totalDeals });
+    console.log('[Pipeline] Done:', JSON.stringify(report));
   } catch(e) {
-    res.json({ success: false, error: e.message });
+    console.error('[Pipeline] Error:', e.message);
   }
 });
 
@@ -192,6 +192,26 @@ router.get('/seed-deals', requireAdminOrJobKey, async (req, res) => {
       added++;
     }
     res.json({ success: true, added, skipped });
+  } catch(e) {
+    res.json({ success: false, error: e.message });
+  }
+});
+router.get('/trim-store', requireAdminOrJobKey, async (req, res) => {
+  try {
+    const storeName = req.query.store || 'Jumia Maroc';
+    const max = parseInt(req.query.max || '20');
+    const store = await Store.findOne({ name: { $regex: '^' + storeName + '$', $options: 'i' } });
+    if (!store) return res.json({ success: false, error: 'Store not found' });
+    const keep = await Deal.find({ store: store._id, isActive: true })
+      .sort({ aiScore: -1 }).limit(max).select('_id');
+    const keepIds = keep.map(d => d._id);
+    const result = await Deal.deleteMany({
+      store: store._id,
+      _id: { $nin: keepIds },
+      isFeatured: false,
+    });
+    const remaining = await Deal.countDocuments({ store: store._id, isActive: true });
+    res.json({ success: true, deleted: result.deletedCount, remaining });
   } catch(e) {
     res.json({ success: false, error: e.message });
   }
