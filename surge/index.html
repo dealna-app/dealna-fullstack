@@ -6238,8 +6238,14 @@ function openModal(deal) {
   ctaBtn.rel = '';
   ctaBtn.onclick = (e) => {
     e.preventDefault();
-    closeModal();
-    openDealDetail(deal);
+    const url = getExternalDealUrl(deal);
+    if (url) {
+      trackClick(deal._id || deal.id);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      closeModal();
+      openDealDetail(deal);
+    }
   };
 
   // Show modal
