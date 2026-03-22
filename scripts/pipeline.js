@@ -79,6 +79,7 @@ Return ONLY a JSON array:
     "currency": "${currency}",
     "country": "${country}",
     "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
+    "affiliateUrl": "https://www.example.com/search?q=product+keywords",
     "tag": "new"
   }
 ]
@@ -91,6 +92,7 @@ Rules:
   beauty: photo-1596462502278-27bfdc403348, photo-1522335789203-aabd1fc54bc9, photo-1487412947147-5cebf100ffc2
   travel: photo-1436491865332-7a61a109cc05, photo-1488085061387-422e29b40080, photo-1507525428034-b723cf961d3e
   local: photo-1555041469-a586c61ea9bc, photo-1441986300917-64674bd600d8
+  affiliateUrl MUST be a working search URL on the store's own website for the specific product. Use the store website and append the search path. Examples: jumia.ma/catalog/?q=iphone, hm.com/ma/search?q=summer+dress, zara.com/ma/search?term=jacket. Never use just the homepage.
 - discountValue between 10-70
 - originalPrice and discountedPrice must be realistic numbers in ${currency}
 - Return exactly ${count} deals
@@ -319,7 +321,7 @@ for (let i = 0; i < GENERATE_FOR.length; i += BATCH_SIZE) {
           country: d.country || gen.country || 'MA',
           tag: ['hot','new','verified'].includes(d.tag) ? d.tag : 'new',
           icon: '🏷️',
-          affiliateUrl: store.affiliateBaseUrl || store.website || gen.website || 'https://dealna.ma',
+          affiliateUrl: d.affiliateUrl || store.affiliateBaseUrl || store.website || gen.website || 'https://dealna.ma',
           expiresAt: exp,
           aiScore: 70,
           isActive: true,
