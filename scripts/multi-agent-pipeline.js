@@ -3,12 +3,12 @@
 //
 // GENERATION AGENTS (3 — run in parallel):
 //   1. Groq         — llama-3.3-70b-versatile
-//   2. Gemini       — gemini-1.5-flash-002'
+//   2. Gemini       — gemini-1.5-flash'
 //   3. OpenRouter   — nvidia/nemotron-3-super-120b-a12b:free
 //
 // SCORING AGENTS (10 — all score every deal):
 //   1. Groq         — llama-3.3-70b-versatile
-//   2. Gemini       — gemini-1.5-flash-002'
+//   2. Gemini       — gemini-1.5-flash'
 //   3. Gemini       — gemini-2.0-flash-exp'
 //   4. OpenRouter   — nvidia/nemotron-3-super-120b-a12b:free
 //   5. OpenRouter   — nousresearch/hermes-3-llama-3.1-405b:free
@@ -207,7 +207,7 @@ async function callGroq(prompt, maxTokens = 2000, temp = 0.8) {
   return data.choices[0].message.content.trim();
 }
 
-async function callGemini(prompt, model = 'gemini-1.5-flash-002', maxTokens = 2000, temp = 0.8) {
+async function callGemini(prompt, model = 'gemini-1.5-flash', maxTokens = 2000, temp = 0.8) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
     {
@@ -257,7 +257,7 @@ async function generateWithGroq(s, cat, count, country, cur, web) {
   return parseJSON(await callGroq(buildGenerationPrompt(s, cat, count, country, cur, web), 2000, 0.8));
 }
 async function generateWithGemini(s, cat, count, country, cur, web) {
-  return parseJSON(await callGemini(buildGenerationPrompt(s, cat, count, country, cur, web), 'gemini-1.5-flash-002', 2000, 0.8));
+  return parseJSON(await callGemini(buildGenerationPrompt(s, cat, count, country, cur, web), 'gemini-1.5-flash', 2000, 0.8));
 }
 async function generateWithNemotron(s, cat, count, country, cur, web) {
   return parseJSON(await callOpenRouter(buildGenerationPrompt(s, cat, count, country, cur, web), 'nvidia/nemotron-3-super-120b-a12b:free', 2000, 0.8));
@@ -266,7 +266,7 @@ async function generateWithNemotron(s, cat, count, country, cur, web) {
 // ── 10 Scoring agents ─────────────────────────────────────────
 const SCORING_AGENTS = [
   { name: 'groq',     call: (p) => callGroq(p, 300, 0.1) },
-  { name: 'gemini15', call: (p) => callGemini(p, 'gemini-1.5-flash-002', 300, 0.1) },
+  { name: 'gemini15', call: (p) => callGemini(p, 'gemini-1.5-flash', 300, 0.1) },
   { name: 'gemini20', call: (p) => callGemini(p, 'gemini-2.0-flash-exp', 300, 0.1) },
   { name: 'nemotron', call: (p) => callOpenRouter(p, 'nvidia/nemotron-3-super-120b-a12b:free', 300, 0.1) },
   { name: 'hermes405b', call: (p) => callOpenRouter(p, 'nousresearch/hermes-3-llama-3.1-405b:free', 300, 0.1) },
